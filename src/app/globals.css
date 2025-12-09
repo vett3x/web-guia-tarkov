@@ -149,5 +149,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Estilo de fondo inspirado en la wiki de Tarkov */
+    background-image: repeating-linear-gradient(45deg, rgba(0,0,0,.05) 1px, transparent 1px, transparent 10px);
+    background-size: 20px 20px;
   }
 }

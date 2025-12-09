@@ -14,7 +14,7 @@ interface CardTematicaProps {
 export const CardTematica: React.FC<CardTematicaProps> = ({ title, description, icon: Icon, href, className }) => {
   return (
     <Link href={href} className={cn("block h-full", className)}>
-      <Card className="h-full transition-all hover:shadow-xl hover:border-primary/70 bg-card/80 backdrop-blur-sm border-2 border-border/50">
+      <Card className="h-full transition-all hover:shadow-lg hover:border-primary/70 bg-secondary/50 border-border/50">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-bold uppercase tracking-wider text-primary">{title}</CardTitle>
           <Icon className="h-8 w-8 text-primary/80" />
