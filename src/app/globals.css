@@ -19,7 +19,8 @@
 
     --popover-foreground: 0 0% 3.9%;
 
-    --primary: 0 0% 9%;
+    /* Nuevo Primary: Verde Oliva Claro (para texto y acentos) */
+    --primary: 80 10% 30%; 
 
     --primary-foreground: 0 0% 98%;
 
@@ -87,7 +88,8 @@
 
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 98%;
+    /* Nuevo Primary: Verde Oliva Oscuro (para texto y acentos) */
+    --primary: 80 10% 70%; 
 
     --primary-foreground: 0 0% 9%;
 
