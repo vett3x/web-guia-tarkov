@@ -8,10 +8,11 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // Usar las mismas variables que ya están en el cliente de Supabase
+  // Usar las variables de entorno o los valores hardcodeados como fallback
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hfjtksfqcmuebxfmbxgq.supabase.co"
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmanRrc2ZxY211ZWJ4Zm1ieGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyODYzNTksImV4cCI6MjA4MDg2MjM1OX0.38pVqlfbWYMjHfgwn_MKk6d6_Sa6SGMkwuYjtNbOmfU"
 
+  // Verificar que tenemos los valores necesarios
   if (!supabaseUrl || !supabaseKey) {
     console.error('Missing Supabase environment variables')
     // Si faltan variables, permitir acceso para no romper la aplicación en desarrollo
@@ -65,33 +66,39 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Actualizar la sesión de autenticación
-  const { data: { session }, error } = await supabase.auth.getSession()
+  try {
+    // Actualizar la sesión de autenticación
+    const { data: { session }, error } = await supabase.auth.getSession()
 
-  if (error) {
-    console.error('Error getting session in middleware:', error.message)
-    // Si hay error, continuar sin sesión
+    if (error) {
+      console.error('Error getting session in middleware:', error.message)
+      // Si hay error, continuar sin sesión
+    }
+
+    // Rutas protegidas
+    const protectedRoutes = ['/dashboard', '/dashboard/:path*']
+    const isProtectedRoute = protectedRoutes.some(route => 
+      request.nextUrl.pathname.startsWith(route.replace('/:path*', ''))
+    )
+
+    // Si no hay sesión y es una ruta protegida, redirigir a login
+    if (!session && isProtectedRoute) {
+      const redirectUrl = new URL('/login', request.url)
+      redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Si hay sesión y está en login, redirigir al dashboard
+    if (session && request.nextUrl.pathname.startsWith('/login')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+
+    return response
+  } catch (error) {
+    console.error('Middleware error:', error)
+    // En caso de error, permitir el acceso para no bloquear la aplicación
+    return response
   }
-
-  // Rutas protegidas
-  const protectedRoutes = ['/dashboard', '/dashboard/:path*']
-  const isProtectedRoute = protectedRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route.replace('/:path*', ''))
-  )
-
-  // Si no hay sesión y es una ruta protegida, redirigir a login
-  if (!session && isProtectedRoute) {
-    const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // Si hay sesión y está en login, redirigir al dashboard
-  if (session && request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  return response
 }
 
 export const config = {

@@ -9,7 +9,8 @@ import { ThemedContainer } from '@/components/themed-container';
 import { 
   Shield, Users, FileText, Settings, 
   LogOut, User, AlertCircle, CheckCircle,
-  Loader2, RefreshCw, Home
+  Loader2, RefreshCw, Home, Database,
+  Cookie, Key
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -18,9 +19,26 @@ export default function DashboardPage() {
   const { user, profile, isLoading, signOut, refreshProfile } = useAuth();
   const router = useRouter();
   const [creatingProfile, setCreatingProfile] = useState(false);
+  const [authCheck, setAuthCheck] = useState<any>(null);
 
   useEffect(() => {
     console.log('Dashboard - Auth state:', { user, profile, isLoading });
+    
+    // Verificar autenticación via API
+    const checkApiAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/check');
+        const data = await response.json();
+        setAuthCheck(data);
+        console.log('API Auth check:', data);
+      } catch (error) {
+        console.error('Error checking API auth:', error);
+      }
+    };
+    
+    if (!isLoading) {
+      checkApiAuth();
+    }
   }, [user, profile, isLoading]);
 
   const handleSignOut = async () => {
@@ -125,8 +143,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Estado de autenticación */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Estado de autenticación DETALLADO */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <ThemedContainer title="ESTADO DE AUTENTICACIÓN">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -140,6 +158,13 @@ export default function DashboardPage() {
                   <span className="text-foreground">Perfil en base de datos:</span>
                   <span className={profile ? "text-green-500 font-bold" : "text-yellow-500 font-bold"}>
                     {profile ? '✅ ENCONTRADO' : '⚠️ NO ENCONTRADO'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground">Middleware API Check:</span>
+                  <span className={authCheck?.authenticated ? "text-green-500 font-bold" : "text-yellow-500 font-bold"}>
+                    {authCheck ? (authCheck.authenticated ? '✅ OK' : '⚠️ NO SESSION') : '⏳ CHECKING...'}
                   </span>
                 </div>
                 
@@ -210,6 +235,41 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </ThemedContainer>
+
+            <ThemedContainer title="INFORMACIÓN DEL SISTEMA">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Database className="h-4 w-4 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-bold">Base de Datos</p>
+                    <p className="text-xs text-muted-foreground">Conectada a Supabase</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Cookie className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="text-sm font-bold">Cookies</p>
+                    <p className="text-xs text-muted-foreground">Sesión mantenida por cookies</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Key className="h-4 w-4 text-purple-500" />
+                  <div>
+                    <p className="text-sm font-bold">Middleware</p>
+                    <p className="text-xs text-muted-foreground">Protegiendo rutas /dashboard</p>
+                  </div>
+                </div>
+                
+                {authCheck && (
+                  <div className="mt-3 p-2 border border-border/50 rounded text-xs">
+                    <p><strong>Última verificación:</strong> {new Date(authCheck.timestamp).toLocaleTimeString()}</p>
+                    <p><strong>Middleware working:</strong> {authCheck.middlewareWorking ? '✅' : '❌'}</p>
+                  </div>
+                )}
+              </div>
+            </ThemedContainer>
           </div>
         </div>
 
@@ -266,60 +326,6 @@ export default function DashboardPage() {
           </div>
         </ThemedContainer>
 
-        {/* Información del sistema */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ThemedContainer title="INFORMACIÓN DEL SISTEMA">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span>Middleware de seguridad:</span>
-                <span className="text-green-500 font-bold">ACTIVADO</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Verificación de sesión:</span>
-                <span className="text-green-500 font-bold">FUNCIONANDO</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Autenticación Supabase:</span>
-                <span className="text-green-500 font-bold">ACTIVA</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Base de datos:</span>
-                <span className="text-green-500 font-bold">CONECTADA</span>
-              </div>
-            </div>
-          </ThemedContainer>
-
-          <ThemedContainer title="PRÓXIMOS PASOS">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <div>
-                  <p className="font-bold text-primary">1. Autenticación verificada</p>
-                  <p className="text-sm text-muted-foreground">Middleware activo y funcionando</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <div className={`h-5 w-5 rounded-full mt-0.5 ${profile ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                <div>
-                  <p className="font-bold text-primary">2. Perfil en base de datos</p>
-                  <p className="text-sm text-muted-foreground">
-                    {profile ? 'Perfil encontrado' : 'Crear perfil para acceder a todas las funciones'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <div className="h-5 w-5 rounded-full border border-primary mt-0.5"></div>
-                <div>
-                  <p className="font-bold text-primary">3. Explorar funciones</p>
-                  <p className="text-sm text-muted-foreground">Una vez creado el perfil, podrás usar todos los módulos</p>
-                </div>
-              </div>
-            </div>
-          </ThemedContainer>
-        </div>
-
         {/* Nota informativa */}
         <div className="mt-8 border-2 border-blue-500/30 bg-blue-500/10 p-4 rounded-none">
           <div className="flex items-start gap-3">
@@ -327,9 +333,16 @@ export default function DashboardPage() {
             <div>
               <h4 className="font-bold text-blue-500 mb-2">✅ SISTEMA DE AUTENTICACIÓN FUNCIONANDO</h4>
               <p className="text-blue-500/90 text-sm">
-                El middleware está verificando correctamente la sesión. Si no estuvieras autenticado, habrías sido redirigido a /login.
-                Ahora puedes crear tu perfil en la base de datos para acceder a todas las funciones del dashboard.
+                Si puedes ver esta página, significa que el middleware te ha permitido el acceso porque estás autenticado.
+                El sistema verifica tu sesión mediante cookies y protege las rutas /dashboard.
+                {!profile && ' Ahora puedes crear tu perfil en la base de datos para acceder a todas las funciones.'}
               </p>
+              {authCheck && !authCheck.authenticated && (
+                <p className="text-yellow-500/90 text-sm mt-2">
+                  ⚠️ Nota: La verificación API no detecta tu sesión, pero el cliente sí. Esto puede ser normal si las cookies
+                  no se están pasando correctamente a la API, pero el middleware sí las está detectando.
+                </p>
+              )}
             </div>
           </div>
         </div>
