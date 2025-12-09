@@ -51,30 +51,40 @@ export async function middleware(request: NextRequest) {
   // Si hay sesión, verificar roles para rutas específicas
   if (session) {
     // Obtener perfil del usuario
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
 
-    if (profile) {
-      // Verificar permisos para rutas de admin
-      if (isAdminRoute && profile.role !== 'superadmin') {
+    // Si hay error o no existe perfil, todavía permitir acceso a rutas básicas
+    // (el dashboard debería manejar la creación del perfil si es necesario)
+    if (error || !profile) {
+      // Si es una ruta que requiere un rol específico, redirigir al dashboard
+      if (isAdminRoute || isModeratorRoute || isEditorRoute) {
         const redirectUrl = new URL('/dashboard', request.url);
         return NextResponse.redirect(redirectUrl);
       }
+      // Para otras rutas protegidas (como /dashboard), permitir acceso
+      return NextResponse.next();
+    }
 
-      // Verificar permisos para rutas de moderador
-      if (isModeratorRoute && !['superadmin', 'moderator'].includes(profile.role)) {
-        const redirectUrl = new URL('/dashboard', request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
+    // Verificar permisos para rutas de admin
+    if (isAdminRoute && profile.role !== 'superadmin') {
+      const redirectUrl = new URL('/dashboard', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-      // Verificar permisos para rutas de editor
-      if (isEditorRoute && !['superadmin', 'moderator', 'editor'].includes(profile.role)) {
-        const redirectUrl = new URL('/dashboard', request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
+    // Verificar permisos para rutas de moderador
+    if (isModeratorRoute && !['superadmin', 'moderator'].includes(profile.role)) {
+      const redirectUrl = new URL('/dashboard', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Verificar permisos para rutas de editor
+    if (isEditorRoute && !['superadmin', 'moderator', 'editor'].includes(profile.role)) {
+      const redirectUrl = new URL('/dashboard', request.url);
+      return NextResponse.redirect(redirectUrl);
     }
   }
 

@@ -33,6 +33,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const createProfileIfMissing = async (userId: string, userEmail: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: userEmail,
+          username: userEmail.split('@')[0],
+          role: 'user'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error creating profile:', error);
+      return null;
+    }
+  };
+
+  const loadUserProfile = async (userId: string, userEmail: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') { // No se encontró el perfil
+          console.log('Profile not found, creating one...');
+          const newProfile = await createProfileIfMissing(userId, userEmail);
+          setProfile(newProfile);
+        } else {
+          console.error('Error loading profile:', error);
+          setProfile(null);
+        }
+      } else {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      setProfile(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Obtener sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        loadUserProfile(session.user.id);
+        loadUserProfile(session.user.id, session.user.email!);
       } else {
         setIsLoading(false);
       }
@@ -53,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await loadUserProfile(session.user.id);
+          await loadUserProfile(session.user.id, session.user.email!);
         } else {
           setProfile(null);
           setIsLoading(false);
@@ -63,28 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const loadUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error loading profile:', error);
-        setProfile(null);
-      } else {
-        setProfile(data);
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      setProfile(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const signOut = async () => {
     await supabase.auth.signOut();

@@ -134,19 +134,9 @@ export function UserMenu() {
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              {getRoleBadge()}
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2 bg-primary/5 rounded border border-primary/10">
-                <p className="text-muted-foreground">ROL</p>
-                <p className="font-bold text-primary uppercase">{profile.role}</p>
-              </div>
-              <div className="p-2 bg-primary/5 rounded border border-primary/10">
-                <p className="text-muted-foreground">ID</p>
-                <p className="font-mono text-xs truncate" title={user.id}>
-                  {user.id.substring(0, 8)}...
-                </p>
+              {/* Badge de rol ajustado para no salirse */}
+              <div className="flex-shrink-0">
+                {getRoleBadge()}
               </div>
             </div>
           </div>
@@ -182,11 +172,7 @@ export function UserMenu() {
           <span>Cerrar Sesión</span>
         </DropdownMenuItem>
         
-        <div className="p-3 border-t border-border/30">
-          <p className="text-xs text-center text-muted-foreground">
-            Sistema Táctico v1.0
-          </p>
-        </div>
+        {/* Eliminada la sección de Sistema Táctico v1.0 */}
       </DropdownMenuContent>
     </DropdownMenu>
   );
