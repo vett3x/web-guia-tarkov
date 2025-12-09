@@ -7,7 +7,8 @@
 @layer base {
   :root {
 
-    --background: 0 0% 100%;
+    /* Fondo: Blanco roto */
+    --background: 0 0% 98%; 
 
     --foreground: 0 0% 3.9%;
 
@@ -19,8 +20,8 @@
 
     --popover-foreground: 0 0% 3.9%;
 
-    /* Nuevo Primary: Verde Oliva Claro (para texto y acentos) */
-    --primary: 80 10% 30%; 
+    /* Primary: Verde Militar/Oliva (más saturado) */
+    --primary: 80 40% 30%; 
 
     --primary-foreground: 0 0% 98%;
 
@@ -40,7 +41,7 @@
 
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 89.8%;
+    --border: 0 0% 85%; /* Borde más suave */
 
     --input: 0 0% 89.8%;
 
@@ -76,20 +77,21 @@
     --sidebar-ring: 217.2 91.2% 59.8%}
   .dark {
 
-    --background: 0 0% 3.9%;
+    /* Fondo: Gris oscuro */
+    --background: 0 0% 8%; 
 
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 3.9%;
+    --card: 0 0% 10%;
 
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 3.9%;
+    --popover: 0 0% 10%;
 
     --popover-foreground: 0 0% 98%;
 
-    /* Nuevo Primary: Verde Oliva Oscuro (para texto y acentos) */
-    --primary: 80 10% 70%; 
+    /* Primary: Verde Militar/Oliva (más saturado y claro para contraste) */
+    --primary: 80 40% 60%; 
 
     --primary-foreground: 0 0% 9%;
 
