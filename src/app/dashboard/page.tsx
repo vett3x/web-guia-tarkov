@@ -2,20 +2,23 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { ThemedContainer } from '@/components/themed-container';
 import { 
   Shield, Users, FileText, Settings, BarChart, 
   AlertTriangle, Edit, Eye, Globe, Database,
-  Activity, Cpu, Zap, Server, Network, Terminal
+  Activity, Cpu, Zap, Server, Network, Terminal,
+  UserPlus, RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
-  const { user, profile, isLoading, isSuperAdmin, isModerator, isEditor } = useAuth();
+  const { user, profile, isLoading, signOut } = useAuth();
+  const [creatingProfile, setCreatingProfile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,28 +27,56 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  if (isLoading || !user || !profile) {
+  const handleCreateProfile = async () => {
+    if (!user) return;
+    
+    setCreatingProfile(true);
+    try {
+      const response = await fetch('/api/profile/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast.success('Perfil creado exitosamente');
+        // Recargar la página para actualizar el perfil
+        window.location.reload();
+      } else {
+        toast.error(data.error || 'Error al crear el perfil');
+      }
+    } catch (error) {
+      toast.error('Error de conexión');
+    } finally {
+      setCreatingProfile(false);
+    }
+  };
+
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-primary">VERIFICANDO CREDENCIALES...</p>
+          <p className="mt-4 text-primary">CARGANDO SISTEMA...</p>
         </div>
       </div>
     );
   }
 
   const getWelcomeMessage = () => {
-    if (isSuperAdmin()) return "COMANDANTE, BIENVENIDO AL SISTEMA DE CONTROL";
-    if (isModerator()) return "MODERADOR, SISTEMA DE GESTIÓN DE CONTENIDO";
-    if (isEditor()) return "EDITOR, PANEL DE CREACIÓN DE CONTENIDO";
+    if (profile?.role === 'superadmin') return "COMANDANTE, BIENVENIDO AL SISTEMA DE CONTROL";
+    if (profile?.role === 'moderator') return "MODERADOR, SISTEMA DE GESTIÓN DE CONTENIDO";
+    if (profile?.role === 'editor') return "EDITOR, PANEL DE CREACIÓN DE CONTENIDO";
     return "USUARIO, PANEL DE CONTROL";
   };
 
   const getRoleColor = () => {
-    if (isSuperAdmin()) return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
-    if (isModerator()) return "bg-blue-500/20 text-blue-500 border-blue-500/30";
-    if (isEditor()) return "bg-green-500/20 text-green-500 border-green-500/30";
+    if (profile?.role === 'superadmin') return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
+    if (profile?.role === 'moderator') return "bg-blue-500/20 text-blue-500 border-blue-500/30";
+    if (profile?.role === 'editor') return "bg-green-500/20 text-green-500 border-green-500/30";
     return "bg-primary/20 text-primary border-primary/30";
   };
 
@@ -83,9 +114,9 @@ export default function DashboardPage() {
 
   const renderModules = () => {
     const modules = [];
-    if (isSuperAdmin()) modules.push(...superAdminModules);
-    if (isModerator()) modules.push(...moderatorModules);
-    if (isEditor()) modules.push(...editorModules);
+    if (profile?.role === 'superadmin') modules.push(...superAdminModules);
+    if (profile?.role === 'moderator' || profile?.role === 'superadmin') modules.push(...moderatorModules);
+    if (profile?.role === 'editor' || profile?.role === 'moderator' || profile?.role === 'superadmin') modules.push(...editorModules);
     modules.push(...userModules);
     
     // Eliminar duplicados por href
@@ -113,7 +144,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">IDENTIFICACIÓN</p>
-                  <p className="font-bold text-primary">{profile.username || user.email}</p>
+                  <p className="font-bold text-primary">{profile?.username || user.email}</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
                   <Shield className="h-5 w-5 text-primary" />
@@ -121,6 +152,37 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Si no hay perfil, mostrar alerta para crear uno */}
+          {!profile && (
+            <div className="border-2 border-primary/30 bg-primary/10 p-6 rounded-none mb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-primary mb-2">PERFIL NO ENCONTRADO</h3>
+                  <p className="text-primary/80">
+                    Necesitas crear un perfil para acceder a todas las funcionalidades del sistema.
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleCreateProfile} 
+                  disabled={creatingProfile}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {creatingProfile ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      CREANDO...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      CREAR PERFIL
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Stats rápidas */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

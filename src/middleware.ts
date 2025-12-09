@@ -57,15 +57,10 @@ export async function middleware(request: NextRequest) {
       .eq('id', session.user.id)
       .maybeSingle();
 
-    // Si hay error o no existe perfil, todavía permitir acceso a rutas básicas
-    // (el dashboard debería manejar la creación del perfil si es necesario)
+    // Si no hay perfil, permitir acceso a todas las rutas de dashboard
+    // (el dashboard se encargará de crear el perfil si es necesario)
     if (error || !profile) {
-      // Si es una ruta que requiere un rol específico, redirigir al dashboard
-      if (isAdminRoute || isModeratorRoute || isEditorRoute) {
-        const redirectUrl = new URL('/dashboard', request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
-      // Para otras rutas protegidas (como /dashboard), permitir acceso
+      // Permitir acceso a cualquier ruta bajo /dashboard
       return NextResponse.next();
     }
 
