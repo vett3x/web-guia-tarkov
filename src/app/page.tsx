@@ -1,4 +1,3 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Map, ScrollText } from "lucide-react";
@@ -54,7 +53,6 @@ export default function Home() {
           />
         </section>
       </main>
-      <MadeWithDyad />
     </div>
   );
 }

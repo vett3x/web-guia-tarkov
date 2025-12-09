@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/navbar";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 
 export default function MapasPage() {
   return (
@@ -11,7 +10,6 @@ export default function MapasPage() {
           Aquí encontrarás todos los mapas detallados con puntos de interés, loot y rutas de extracción. ¡Próximamente!
         </p>
       </main>
-      <MadeWithDyad />
     </div>
   );
 }

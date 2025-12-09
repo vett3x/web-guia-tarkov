@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/navbar";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 
 export default function ComerciantesPage() {
   return (
@@ -11,7 +10,6 @@ export default function ComerciantesPage() {
           Información detallada sobre Peacekeeper, Prapor, Therapist y todos los demás Comerciantes. ¡Próximamente!
         </p>
       </main>
-      <MadeWithDyad />
     </div>
   );
 }
