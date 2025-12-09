@@ -9,36 +9,31 @@ import { ThemedContainer } from '@/components/themed-container';
 import { 
   Shield, Users, FileText, Settings, 
   LogOut, User, AlertCircle, CheckCircle,
-  Loader2
+  Loader2, RefreshCw, Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
-  const { user, profile, isLoading, signOut } = useAuth();
+  const { user, profile, isLoading, signOut, refreshProfile } = useAuth();
   const router = useRouter();
   const [creatingProfile, setCreatingProfile] = useState(false);
-  const [localAuthState, setLocalAuthState] = useState<any>(null);
 
   useEffect(() => {
-    // Verificar estado de autenticación local
-    const sessionData = localStorage.getItem('supabase.auth.token');
-    setLocalAuthState(sessionData ? JSON.parse(sessionData) : null);
-    
-    console.log('Dashboard - Auth state:', {
-      user: user,
-      profile: profile,
-      isLoading: isLoading,
-      localStorage: sessionData ? 'Present' : 'None'
-    });
-
-    // Si el usuario está autenticado pero no tiene perfil, intentar crearlo automáticamente
-    if (user && !profile && !isLoading) {
-      createProfileAutomatically();
-    }
+    console.log('Dashboard - Auth state:', { user, profile, isLoading });
   }, [user, profile, isLoading]);
 
-  const createProfileAutomatically = async () => {
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
+
+  const handleCreateProfile = async () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para crear un perfil');
+      return;
+    }
+
     setCreatingProfile(true);
     try {
       const response = await fetch('/api/profile/create', {
@@ -52,8 +47,7 @@ export default function DashboardPage() {
       
       if (response.ok) {
         toast.success('Perfil creado exitosamente');
-        // Recargar la página para actualizar el estado
-        window.location.reload();
+        await refreshProfile();
       } else {
         toast.error('Error al crear perfil: ' + (data.error || 'Error desconocido'));
       }
@@ -65,41 +59,43 @@ export default function DashboardPage() {
     }
   };
 
+  const handleRefreshProfile = async () => {
+    await refreshProfile();
+    toast.info('Perfil actualizado');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-primary">CARGANDO PANEL...</p>
+          <p className="mt-4 text-primary">VERIFICANDO AUTENTICACIÓN...</p>
         </div>
       </div>
     );
   }
 
-  // Si no hay usuario (aunque el middleware debería redirigir), mostrar mensaje
   if (!user) {
+    // Este caso no debería ocurrir porque el middleware redirige, pero por si acaso
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-primary mb-2">No autenticado</h1>
           <p className="text-muted-foreground mb-4">Debes iniciar sesión para acceder al dashboard</p>
-          <Button onClick={() => router.push('/login')}>
-            Ir a Login
-          </Button>
+          <div className="space-x-4">
+            <Button onClick={() => router.push('/login')}>
+              Ir a Login
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/')}>
+              <Home className="mr-2 h-4 w-4" />
+              Ir al Inicio
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
-  };
-
-  const handleManualCreateProfile = async () => {
-    await createProfileAutomatically();
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-secondary/20">
@@ -134,7 +130,7 @@ export default function DashboardPage() {
             <ThemedContainer title="ESTADO DE AUTENTICACIÓN">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-foreground">Usuario:</span>
+                  <span className="text-foreground">Usuario autenticado:</span>
                   <span className="text-green-500 font-bold">
                     ✅ CONECTADO
                   </span>
@@ -147,20 +143,17 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="text-foreground">Sesión en localStorage:</span>
-                  <span className={localAuthState ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
-                    {localAuthState ? '✅ PRESENTE' : '❌ AUSENTE'}
-                  </span>
-                </div>
-                
                 <div className="mt-4 p-3 border border-primary/20 rounded bg-primary/5">
                   <p className="text-sm text-primary"><strong>Email:</strong> {user.email}</p>
                   <p className="text-sm text-primary"><strong>ID:</strong> {user.id}</p>
                   {profile && (
                     <>
                       <p className="text-sm text-primary"><strong>Username:</strong> {profile.username}</p>
-                      <p className="text-sm text-primary"><strong>Rol:</strong> {profile.role}</p>
+                      <p className="text-sm text-primary"><strong>Rol:</strong> 
+                        <span className="ml-2 bg-primary/20 text-primary px-2 py-1 rounded text-xs">
+                          {profile.role.toUpperCase()}
+                        </span>
+                      </p>
                     </>
                   )}
                 </div>
@@ -169,9 +162,9 @@ export default function DashboardPage() {
 
             <ThemedContainer title="ACCIONES RÁPIDAS">
               <div className="space-y-3">
-                {!profile && (
+                {!profile ? (
                   <Button 
-                    onClick={handleManualCreateProfile}
+                    onClick={handleCreateProfile}
                     disabled={creatingProfile}
                     className="w-full bg-green-600 hover:bg-green-700"
                   >
@@ -186,6 +179,15 @@ export default function DashboardPage() {
                         Crear Perfil en Base de Datos
                       </>
                     )}
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleRefreshProfile}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Actualizar Perfil
                   </Button>
                 )}
                 
@@ -203,15 +205,8 @@ export default function DashboardPage() {
                   variant="outline"
                   className="w-full"
                 >
+                  <Home className="mr-2 h-4 w-4" />
                   Volver al Inicio
-                </Button>
-                
-                <Button 
-                  onClick={() => window.location.reload()}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Recargar Página
                 </Button>
               </div>
             </ThemedContainer>
@@ -276,15 +271,15 @@ export default function DashboardPage() {
           <ThemedContainer title="INFORMACIÓN DEL SISTEMA">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span>Modo de seguridad:</span>
+                <span>Middleware de seguridad:</span>
                 <span className="text-green-500 font-bold">ACTIVADO</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Middleware:</span>
-                <span className="text-green-500 font-bold">VERIFICANDO SESIÓN</span>
+                <span>Verificación de sesión:</span>
+                <span className="text-green-500 font-bold">FUNCIONANDO</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Autenticación:</span>
+                <span>Autenticación Supabase:</span>
                 <span className="text-green-500 font-bold">ACTIVA</span>
               </div>
               <div className="flex items-center justify-between">
@@ -299,7 +294,7 @@ export default function DashboardPage() {
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
-                  <p className="font-bold text-primary">1. Acceso al dashboard verificado</p>
+                  <p className="font-bold text-primary">1. Autenticación verificada</p>
                   <p className="text-sm text-muted-foreground">Middleware activo y funcionando</p>
                 </div>
               </div>
@@ -325,24 +320,19 @@ export default function DashboardPage() {
           </ThemedContainer>
         </div>
 
-        {/* Nota sobre el trigger de Supabase */}
-        {!profile && (
-          <div className="mt-8 border-2 border-yellow-500/30 bg-yellow-500/10 p-4 rounded-none">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-yellow-500 mb-2">⚠️ PERFIL NO ENCONTRADO</h4>
-                <p className="text-yellow-500/90 text-sm">
-                  El trigger automático de creación de perfiles en Supabase podría no estar funcionando.
-                  Usa el botón "Crear Perfil en Base de Datos" para crear tu perfil manualmente.
-                </p>
-                <p className="text-yellow-500/90 text-sm mt-2">
-                  En producción, el trigger debería crear el perfil automáticamente al registrarse.
-                </p>
-              </div>
+        {/* Nota informativa */}
+        <div className="mt-8 border-2 border-blue-500/30 bg-blue-500/10 p-4 rounded-none">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-6 w-6 text-blue-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-blue-500 mb-2">✅ SISTEMA DE AUTENTICACIÓN FUNCIONANDO</h4>
+              <p className="text-blue-500/90 text-sm">
+                El middleware está verificando correctamente la sesión. Si no estuvieras autenticado, habrías sido redirigido a /login.
+                Ahora puedes crear tu perfil en la base de datos para acceder a todas las funciones del dashboard.
+              </p>
             </div>
           </div>
-        )}
+        </div>
       </main>
       <Footer />
     </div>

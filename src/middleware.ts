@@ -8,9 +8,20 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // Usar las mismas variables que ya están en el cliente de Supabase
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hfjtksfqcmuebxfmbxgq.supabase.co"
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmanRrc2ZxY211ZWJ4Zm1ieGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyODYzNTksImV4cCI6MjA4MDg2MjM1OX0.38pVqlfbWYMjHfgwn_MKk6d6_Sa6SGMkwuYjtNbOmfU"
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing Supabase environment variables')
+    // Si faltan variables, permitir acceso para no romper la aplicación en desarrollo
+    // En producción, deberían estar definidas
+    return response
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {
@@ -57,6 +68,11 @@ export async function middleware(request: NextRequest) {
   // Actualizar la sesión de autenticación
   const { data: { session }, error } = await supabase.auth.getSession()
 
+  if (error) {
+    console.error('Error getting session in middleware:', error.message)
+    // Si hay error, continuar sin sesión
+  }
+
   // Rutas protegidas
   const protectedRoutes = ['/dashboard', '/dashboard/:path*']
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -70,19 +86,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Si hay sesión, verificar si tiene perfil (opcional, pero útil)
-  if (session && isProtectedRoute) {
-    // Podemos intentar obtener el perfil, pero si no existe, igual permitir el acceso
-    // porque en el dashboard se puede crear.
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('id', session.user.id)
-      .maybeSingle()
-
-    // Si no tiene perfil, podríamos redirigir a una página de creación de perfil,
-    // pero por ahora dejamos que entre al dashboard y allí se maneje.
-    // También podríamos crear el perfil automáticamente aquí, pero lo haremos en el dashboard.
+  // Si hay sesión y está en login, redirigir al dashboard
+  if (session && request.nextUrl.pathname.startsWith('/login')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return response
@@ -91,5 +97,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/login',
   ],
 }

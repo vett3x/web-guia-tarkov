@@ -15,6 +15,7 @@ interface AuthContextType {
   isSuperAdmin: () => boolean;
   isModerator: () => boolean;
   isEditor: () => boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,59 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('AuthContext - Initializing auth state...');
-    }
-
-    // Obtener sesión inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('AuthContext - Initial session:', session ? 'Exists' : 'None');
-        console.log('AuthContext - User ID:', session?.user?.id);
-      }
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        loadUserProfile(session.user.id, session.user.email!);
-      } else {
-        setIsLoading(false);
-      }
-    }).catch(error => {
-      console.error('AuthContext - Error getting initial session:', error);
-      setIsLoading(false);
-    });
-
-    // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthContext - Auth state changed:', event);
-          console.log('AuthContext - New session:', session ? 'Exists' : 'None');
-        }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await loadUserProfile(session.user.id, session.user.email!);
-        } else {
-          setProfile(null);
-          setIsLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadUserProfile = async (userId: string, userEmail: string) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('AuthContext - Loading profile for user:', userId);
-    }
-    
+  const loadUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -95,28 +44,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         if (error.code === 'PGRST116') { // No se encontró el perfil
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthContext - Profile not found, will create one in dashboard');
-          }
-          // No creamos el perfil aquí, lo dejamos para el dashboard
+          console.log('Profile not found for user:', userId);
           setProfile(null);
         } else {
-          console.error('AuthContext - Error loading profile:', error);
+          console.error('Error loading profile:', error);
           setProfile(null);
         }
       } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthContext - Profile loaded:', data);
-        }
         setProfile(data);
       }
     } catch (error) {
-      console.error('AuthContext - Error loading profile:', error);
+      console.error('Error loading profile:', error);
       setProfile(null);
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await loadUserProfile(user.id);
+    }
+  };
+
+  useEffect(() => {
+    // Obtener sesión inicial
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session:', session);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Escuchar cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -153,7 +143,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hasRole,
       isSuperAdmin,
       isModerator,
-      isEditor
+      isEditor,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>
