@@ -7,8 +7,10 @@ const createMiddlewareSupabaseClient = (req: NextRequest) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hfjtksfqcmuebxfmbxgq.supabase.co";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmanRrc2ZxY211ZWJ4Zm1ieGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyODYzNTksImV4cCI6MjA4MDg2MjM1OX0.38pVqlfbWYMjHfgwn_MKk6d6_Sa6SGMkwuYjtNbOmfU";
 
-  // Obtener la sesión de las cookies
-  const cookieHeader = req.headers.get('cookie') || '';
+  // MODIFICACIÓN: Usar request.cookies para construir el header de cookies de forma explícita
+  // Esto es más robusto en el entorno de Next.js Middleware.
+  const cookieEntries = Array.from(req.cookies.entries());
+  const cookieHeader = cookieEntries.map(([name, value]) => `${name}=${value}`).join('; ');
   
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
@@ -57,10 +59,15 @@ export async function middleware(request: NextRequest) {
       .eq('id', session.user.id)
       .maybeSingle();
 
-    // Si no hay perfil, permitir acceso a todas las rutas de dashboard
+    // Si hay error o no existe perfil, todavía permitir acceso a rutas básicas
     // (el dashboard se encargará de crear el perfil si es necesario)
     if (error || !profile) {
-      // Permitir acceso a cualquier ruta bajo /dashboard
+      // Si es una ruta que requiere un rol específico, redirigir al dashboard
+      if (isAdminRoute || isModeratorRoute || isEditorRoute) {
+        const redirectUrl = new URL('/dashboard', request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+      // Para otras rutas protegidas (como /dashboard), permitir acceso
       return NextResponse.next();
     }
 
