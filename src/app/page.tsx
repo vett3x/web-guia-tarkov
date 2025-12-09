@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Map, ScrollText, Shield, Target, Crosshair, BookOpen, Sword, Armchair, ChevronRight, LogIn, User, AlertCircle } from "lucide-react";
+import { Map, ScrollText, Shield, Target, Crosshair, BookOpen, Sword, Armchair, ChevronRight } from "lucide-react";
 import { CardTematica } from "@/components/card-tematica";
 import { HeroSection } from "@/components/hero-section";
 import { ThemedContainer } from "@/components/themed-container";
@@ -73,42 +73,6 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-secondary/20">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
-        {/* BANNER DE PRUEBA */}
-        <div className="mb-6 border-2 border-primary/30 bg-primary/10 p-4 rounded-none">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-6 w-6 text-primary" />
-              <div>
-                <h3 className="font-bold text-primary">MODO DE PRUEBA ACTIVO</h3>
-                <p className="text-sm text-primary/80">
-                  Middleware deshabilitado. El dashboard es accesible sin autenticación.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                asChild
-                variant="outline"
-                className="border-primary/30 hover:bg-primary/10"
-              >
-                <Link href="/dashboard" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>Acceder al Dashboard</span>
-                </Link>
-              </Button>
-              <Button 
-                asChild
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Link href="/login" className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  <span>Probar Login</span>
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-
         {/* REDES SOCIALES PRIMERO - MÁS DESTACADO */}
         <div className="mb-12">
           <SocialsSection />

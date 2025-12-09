@@ -8,31 +8,62 @@ import { Footer } from '@/components/footer';
 import { ThemedContainer } from '@/components/themed-container';
 import { 
   Shield, Users, FileText, Settings, 
-  LogOut, User, AlertCircle, CheckCircle 
+  LogOut, User, AlertCircle, CheckCircle,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const { user, profile, isLoading, signOut } = useAuth();
   const router = useRouter();
+  const [creatingProfile, setCreatingProfile] = useState(false);
   const [localAuthState, setLocalAuthState] = useState<any>(null);
 
   useEffect(() => {
     // Verificar estado de autenticación local
-    const checkAuth = async () => {
-      const sessionData = localStorage.getItem('supabase.auth.token');
-      setLocalAuthState(sessionData ? JSON.parse(sessionData) : null);
-      
-      console.log('Dashboard - Auth state:', {
-        user: user,
-        profile: profile,
-        isLoading: isLoading,
-        localStorage: sessionData ? 'Present' : 'None'
-      });
-    };
+    const sessionData = localStorage.getItem('supabase.auth.token');
+    setLocalAuthState(sessionData ? JSON.parse(sessionData) : null);
     
-    checkAuth();
+    console.log('Dashboard - Auth state:', {
+      user: user,
+      profile: profile,
+      isLoading: isLoading,
+      localStorage: sessionData ? 'Present' : 'None'
+    });
+
+    // Si el usuario está autenticado pero no tiene perfil, intentar crearlo automáticamente
+    if (user && !profile && !isLoading) {
+      createProfileAutomatically();
+    }
   }, [user, profile, isLoading]);
+
+  const createProfileAutomatically = async () => {
+    setCreatingProfile(true);
+    try {
+      const response = await fetch('/api/profile/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast.success('Perfil creado exitosamente');
+        // Recargar la página para actualizar el estado
+        window.location.reload();
+      } else {
+        toast.error('Error al crear perfil: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (error) {
+      toast.error('Error de conexión al crear perfil');
+      console.error('Error creating profile:', error);
+    } finally {
+      setCreatingProfile(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -45,31 +76,29 @@ export default function DashboardPage() {
     );
   }
 
+  // Si no hay usuario (aunque el middleware debería redirigir), mostrar mensaje
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-primary mb-2">No autenticado</h1>
+          <p className="text-muted-foreground mb-4">Debes iniciar sesión para acceder al dashboard</p>
+          <Button onClick={() => router.push('/login')}>
+            Ir a Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
   };
 
-  const handleCreateProfile = async () => {
-    try {
-      const response = await fetch('/api/profile/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert('Perfil creado exitosamente. Recargando...');
-        window.location.reload();
-      } else {
-        alert('Error: ' + (data.error || 'Error desconocido'));
-      }
-    } catch (error) {
-      alert('Error de conexión');
-    }
+  const handleManualCreateProfile = async () => {
+    await createProfileAutomatically();
   };
 
   return (
@@ -82,19 +111,19 @@ export default function DashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold uppercase tracking-wider text-primary">
-                  PANEL DE CONTROL - MODO PRUEBA
+                  PANEL DE CONTROL
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  Middleware deshabilitado para pruebas. En producción, se requiere autenticación.
+                  Bienvenido al sistema de gestión de la guía de Tarkov
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground">ESTADO ACTUAL</p>
-                  <p className="font-bold text-primary">MODO PRUEBA ACTIVO</p>
+                  <p className="text-sm text-muted-foreground">ESTADO</p>
+                  <p className="font-bold text-primary">AUTENTICADO</p>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
-                  <AlertCircle className="h-5 w-5 text-yellow-500" />
+                <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/30">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
                 </div>
               </div>
             </div>
@@ -105,9 +134,9 @@ export default function DashboardPage() {
             <ThemedContainer title="ESTADO DE AUTENTICACIÓN">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-foreground">Usuario en AuthContext:</span>
-                  <span className={user ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
-                    {user ? '✅ CONECTADO' : '❌ NO CONECTADO'}
+                  <span className="text-foreground">Usuario:</span>
+                  <span className="text-green-500 font-bold">
+                    ✅ CONECTADO
                   </span>
                 </div>
                 
@@ -125,24 +154,38 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 
-                {user && (
-                  <div className="mt-4 p-3 border border-primary/20 rounded bg-primary/5">
-                    <p className="text-sm text-primary"><strong>Email:</strong> {user.email}</p>
-                    <p className="text-sm text-primary"><strong>ID:</strong> {user.id}</p>
-                  </div>
-                )}
+                <div className="mt-4 p-3 border border-primary/20 rounded bg-primary/5">
+                  <p className="text-sm text-primary"><strong>Email:</strong> {user.email}</p>
+                  <p className="text-sm text-primary"><strong>ID:</strong> {user.id}</p>
+                  {profile && (
+                    <>
+                      <p className="text-sm text-primary"><strong>Username:</strong> {profile.username}</p>
+                      <p className="text-sm text-primary"><strong>Rol:</strong> {profile.role}</p>
+                    </>
+                  )}
+                </div>
               </div>
             </ThemedContainer>
 
             <ThemedContainer title="ACCIONES RÁPIDAS">
               <div className="space-y-3">
-                {!profile && user && (
+                {!profile && (
                   <Button 
-                    onClick={handleCreateProfile}
+                    onClick={handleManualCreateProfile}
+                    disabled={creatingProfile}
                     className="w-full bg-green-600 hover:bg-green-700"
                   >
-                    <User className="mr-2 h-4 w-4" />
-                    Crear Perfil en Base de Datos
+                    {creatingProfile ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creando Perfil...
+                      </>
+                    ) : (
+                      <>
+                        <User className="mr-2 h-4 w-4" />
+                        Crear Perfil en Base de Datos
+                      </>
+                    )}
                   </Button>
                 )}
                 
@@ -189,8 +232,8 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground">Gestiona tu información personal</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="w-full">
-                Configurar Perfil
+              <Button variant="outline" size="sm" className="w-full" disabled={!profile}>
+                {profile ? 'Configurar Perfil' : 'Crea tu perfil primero'}
               </Button>
             </div>
 
@@ -205,7 +248,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground">Guías y artículos</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="outline" size="sm" className="w-full" disabled={!profile}>
                 Explorar Contenido
               </Button>
             </div>
@@ -221,7 +264,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground">Ajustes del sistema</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="outline" size="sm" className="w-full" disabled={!profile}>
                 Configurar Sistema
               </Button>
             </div>
@@ -234,17 +277,15 @@ export default function DashboardPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span>Modo de seguridad:</span>
-                <span className="text-yellow-500 font-bold">DESACTIVADO (pruebas)</span>
+                <span className="text-green-500 font-bold">ACTIVADO</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Middleware:</span>
-                <span className="text-yellow-500 font-bold">PERMITIENDO TODO</span>
+                <span className="text-green-500 font-bold">VERIFICANDO SESIÓN</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Autenticación:</span>
-                <span className={user ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
-                  {user ? 'ACTIVA' : 'INACTIVA'}
-                </span>
+                <span className="text-green-500 font-bold">ACTIVA</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Base de datos:</span>
@@ -258,48 +299,50 @@ export default function DashboardPage() {
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
-                  <p className="font-bold text-primary">1. Verificar acceso al dashboard</p>
-                  <p className="text-sm text-muted-foreground">Debes poder ver esta página sin redirección a login</p>
+                  <p className="font-bold text-primary">1. Acceso al dashboard verificado</p>
+                  <p className="text-sm text-muted-foreground">Middleware activo y funcionando</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className={`h-5 w-5 rounded-full mt-0.5 ${profile ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                <div>
+                  <p className="font-bold text-primary">2. Perfil en base de datos</p>
+                  <p className="text-sm text-muted-foreground">
+                    {profile ? 'Perfil encontrado' : 'Crear perfil para acceder a todas las funciones'}
+                  </p>
                 </div>
               </div>
               
               <div className="flex items-start gap-2">
                 <div className="h-5 w-5 rounded-full border border-primary mt-0.5"></div>
                 <div>
-                  <p className="font-bold text-primary">2. Iniciar sesión con Supabase</p>
-                  <p className="text-sm text-muted-foreground">Usa el botón de login en la navbar</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <div className="h-5 w-5 rounded-full border border-primary mt-0.5"></div>
-                <div>
-                  <p className="font-bold text-primary">3. Crear perfil en base de datos</p>
-                  <p className="text-sm text-muted-foreground">Usa el botón "Crear Perfil" arriba</p>
+                  <p className="font-bold text-primary">3. Explorar funciones</p>
+                  <p className="text-sm text-muted-foreground">Una vez creado el perfil, podrás usar todos los módulos</p>
                 </div>
               </div>
             </div>
           </ThemedContainer>
         </div>
 
-        {/* Nota de seguridad */}
-        <div className="mt-8 border-2 border-yellow-500/30 bg-yellow-500/10 p-4 rounded-none">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-yellow-500 mb-2">⚠️ MODO DE PRUEBA ACTIVADO</h4>
-              <p className="text-yellow-500/90 text-sm">
-                El middleware de seguridad está deshabilitado para permitir pruebas. En un entorno de producción real:
-              </p>
-              <ul className="list-disc pl-5 mt-2 text-sm text-yellow-500/90 space-y-1">
-                <li>Restaurar el middleware completo con verificación de sesión</li>
-                <li>Habilitar políticas de seguridad (RLS en Supabase)</li>
-                <li>Configurar variables de entorno adecuadas</li>
-                <li>Implementar HTTPS y cookies seguras</li>
-              </ul>
+        {/* Nota sobre el trigger de Supabase */}
+        {!profile && (
+          <div className="mt-8 border-2 border-yellow-500/30 bg-yellow-500/10 p-4 rounded-none">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-bold text-yellow-500 mb-2">⚠️ PERFIL NO ENCONTRADO</h4>
+                <p className="text-yellow-500/90 text-sm">
+                  El trigger automático de creación de perfiles en Supabase podría no estar funcionando.
+                  Usa el botón "Crear Perfil en Base de Datos" para crear tu perfil manualmente.
+                </p>
+                <p className="text-yellow-500/90 text-sm mt-2">
+                  En producción, el trigger debería crear el perfil automáticamente al registrarse.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
       <Footer />
     </div>
