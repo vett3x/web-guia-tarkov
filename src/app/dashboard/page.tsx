@@ -7,30 +7,50 @@ import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { ThemedContainer } from '@/components/themed-container';
 import { 
-  Shield, Users, FileText, Settings, BarChart, 
-  AlertTriangle, Edit, Eye, Globe, Database,
-  Activity, Cpu, Zap, Server, Network, Terminal,
-  UserPlus, RefreshCw
+  Shield, Users, FileText, Settings, 
+  LogOut, User, AlertCircle, CheckCircle 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const { user, profile, isLoading, signOut } = useAuth();
-  const [creatingProfile, setCreatingProfile] = useState(false);
   const router = useRouter();
+  const [localAuthState, setLocalAuthState] = useState<any>(null);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isLoading, router]);
+    // Verificar estado de autenticación local
+    const checkAuth = async () => {
+      const sessionData = localStorage.getItem('supabase.auth.token');
+      setLocalAuthState(sessionData ? JSON.parse(sessionData) : null);
+      
+      console.log('Dashboard - Auth state:', {
+        user: user,
+        profile: profile,
+        isLoading: isLoading,
+        localStorage: sessionData ? 'Present' : 'None'
+      });
+    };
+    
+    checkAuth();
+  }, [user, profile, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-primary">CARGANDO PANEL...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   const handleCreateProfile = async () => {
-    if (!user) return;
-    
-    setCreatingProfile(true);
     try {
       const response = await fetch('/api/profile/create', {
         method: 'POST',
@@ -42,87 +62,14 @@ export default function DashboardPage() {
       const data = await response.json();
       
       if (response.ok) {
-        toast.success('Perfil creado exitosamente');
-        // Recargar la página para actualizar el perfil
+        alert('Perfil creado exitosamente. Recargando...');
         window.location.reload();
       } else {
-        toast.error(data.error || 'Error al crear el perfil');
+        alert('Error: ' + (data.error || 'Error desconocido'));
       }
     } catch (error) {
-      toast.error('Error de conexión');
-    } finally {
-      setCreatingProfile(false);
+      alert('Error de conexión');
     }
-  };
-
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-primary">CARGANDO SISTEMA...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const getWelcomeMessage = () => {
-    if (profile?.role === 'superadmin') return "COMANDANTE, BIENVENIDO AL SISTEMA DE CONTROL";
-    if (profile?.role === 'moderator') return "MODERADOR, SISTEMA DE GESTIÓN DE CONTENIDO";
-    if (profile?.role === 'editor') return "EDITOR, PANEL DE CREACIÓN DE CONTENIDO";
-    return "USUARIO, PANEL DE CONTROL";
-  };
-
-  const getRoleColor = () => {
-    if (profile?.role === 'superadmin') return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
-    if (profile?.role === 'moderator') return "bg-blue-500/20 text-blue-500 border-blue-500/30";
-    if (profile?.role === 'editor') return "bg-green-500/20 text-green-500 border-green-500/30";
-    return "bg-primary/20 text-primary border-primary/30";
-  };
-
-  const superAdminModules = [
-    { icon: Users, title: "Gestión de Usuarios", description: "Administra todos los usuarios del sistema", href: "/dashboard/users", color: "bg-yellow-500/10" },
-    { icon: Database, title: "Base de Datos", description: "Acceso completo a la base de datos", href: "/dashboard/database", color: "bg-purple-500/10" },
-    { icon: Server, title: "Servidores", description: "Monitoreo y control de servidores", href: "/dashboard/servers", color: "bg-red-500/10" },
-    { icon: Settings, title: "Configuración", description: "Configuración avanzada del sistema", href: "/dashboard/settings", color: "bg-gray-500/10" },
-  ];
-
-  const moderatorModules = [
-    { icon: Eye, title: "Moderación", description: "Revisa y modera contenido", href: "/dashboard/moderation", color: "bg-blue-500/10" },
-    { icon: AlertTriangle, title: "Reportes", description: "Gestión de reportes y problemas", href: "/dashboard/reports", color: "bg-orange-500/10" },
-    { icon: Users, title: "Comunidad", description: "Gestión de la comunidad", href: "/dashboard/community", color: "bg-teal-500/10" },
-  ];
-
-  const editorModules = [
-    { icon: Edit, title: "Editor", description: "Crea y edita contenido", href: "/dashboard/editor", color: "bg-green-500/10" },
-    { icon: FileText, title: "Artículos", description: "Gestión de artículos", href: "/dashboard/articles", color: "bg-emerald-500/10" },
-    { icon: Globe, title: "Contenido", description: "Todo el contenido disponible", href: "/dashboard/content", color: "bg-cyan-500/10" },
-  ];
-
-  const userModules = [
-    { icon: Activity, title: "Actividad", description: "Tu actividad reciente", href: "/dashboard/activity", color: "bg-primary/10" },
-    { icon: FileText, title: "Favoritos", description: "Contenido guardado", href: "/dashboard/favorites", color: "bg-pink-500/10" },
-    { icon: Settings, title: "Perfil", description: "Configura tu perfil", href: "/dashboard/profile", color: "bg-gray-500/10" },
-  ];
-
-  const systemStats = [
-    { label: "Usuarios activos", value: "1,247", icon: Users, change: "+12%" },
-    { label: "Artículos publicados", value: "892", icon: FileText, change: "+5%" },
-    { label: "Visitas hoy", value: "3,458", icon: Activity, change: "+8%" },
-    { label: "Sistema", value: "ONLINE", icon: Cpu, change: "100%" },
-  ];
-
-  const renderModules = () => {
-    const modules = [];
-    if (profile?.role === 'superadmin') modules.push(...superAdminModules);
-    if (profile?.role === 'moderator' || profile?.role === 'superadmin') modules.push(...moderatorModules);
-    if (profile?.role === 'editor' || profile?.role === 'moderator' || profile?.role === 'superadmin') modules.push(...editorModules);
-    modules.push(...userModules);
-    
-    // Eliminar duplicados por href
-    const uniqueModules = Array.from(new Map(modules.map(m => [m.href, m])).values());
-    
-    return uniqueModules;
   };
 
   return (
@@ -131,159 +78,227 @@ export default function DashboardPage() {
       <main className="flex-grow container mx-auto px-4 py-8">
         {/* Header del dashboard */}
         <div className="mb-8">
-          <div className={`border-2 ${getRoleColor()} p-6 rounded-none mb-4`}>
+          <div className="border-2 border-primary/30 p-6 rounded-none mb-4 bg-primary/5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold uppercase tracking-wider">
-                  {getWelcomeMessage()}
+                <h1 className="text-3xl font-bold uppercase tracking-wider text-primary">
+                  PANEL DE CONTROL - MODO PRUEBA
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  Sistema: OPERATIVO | Último acceso: Ahora | IP: Segura
+                  Middleware deshabilitado para pruebas. En producción, se requiere autenticación.
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground">IDENTIFICACIÓN</p>
-                  <p className="font-bold text-primary">{profile?.username || user.email}</p>
+                  <p className="text-sm text-muted-foreground">ESTADO ACTUAL</p>
+                  <p className="font-bold text-primary">MODO PRUEBA ACTIVO</p>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-                  <Shield className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
+                  <AlertCircle className="h-5 w-5 text-yellow-500" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Si no hay perfil, mostrar alerta para crear uno */}
-          {!profile && (
-            <div className="border-2 border-primary/30 bg-primary/10 p-6 rounded-none mb-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-primary mb-2">PERFIL NO ENCONTRADO</h3>
-                  <p className="text-primary/80">
-                    Necesitas crear un perfil para acceder a todas las funcionalidades del sistema.
-                  </p>
+          {/* Estado de autenticación */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <ThemedContainer title="ESTADO DE AUTENTICACIÓN">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground">Usuario en AuthContext:</span>
+                  <span className={user ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
+                    {user ? '✅ CONECTADO' : '❌ NO CONECTADO'}
+                  </span>
                 </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground">Perfil en base de datos:</span>
+                  <span className={profile ? "text-green-500 font-bold" : "text-yellow-500 font-bold"}>
+                    {profile ? '✅ ENCONTRADO' : '⚠️ NO ENCONTRADO'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground">Sesión en localStorage:</span>
+                  <span className={localAuthState ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
+                    {localAuthState ? '✅ PRESENTE' : '❌ AUSENTE'}
+                  </span>
+                </div>
+                
+                {user && (
+                  <div className="mt-4 p-3 border border-primary/20 rounded bg-primary/5">
+                    <p className="text-sm text-primary"><strong>Email:</strong> {user.email}</p>
+                    <p className="text-sm text-primary"><strong>ID:</strong> {user.id}</p>
+                  </div>
+                )}
+              </div>
+            </ThemedContainer>
+
+            <ThemedContainer title="ACCIONES RÁPIDAS">
+              <div className="space-y-3">
+                {!profile && user && (
+                  <Button 
+                    onClick={handleCreateProfile}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Crear Perfil en Base de Datos
+                  </Button>
+                )}
+                
                 <Button 
-                  onClick={handleCreateProfile} 
-                  disabled={creatingProfile}
-                  className="bg-primary hover:bg-primary/90"
+                  onClick={handleSignOut}
+                  variant="outline"
+                  className="w-full border-red-500/30 hover:bg-red-500/10"
                 >
-                  {creatingProfile ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      CREANDO...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      CREAR PERFIL
-                    </>
-                  )}
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Cerrar Sesión
+                </Button>
+                
+                <Button 
+                  onClick={() => router.push('/')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Volver al Inicio
+                </Button>
+                
+                <Button 
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Recargar Página
                 </Button>
               </div>
-            </div>
-          )}
-
-          {/* Stats rápidas */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {systemStats.map((stat, index) => (
-              <Card key={index} className="border border-border/50 bg-black/20 rounded-none">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="text-2xl font-bold text-primary">{stat.value}</p>
-                      <p className="text-xs text-green-500">{stat.change}</p>
-                    </div>
-                    <div className="p-2 bg-primary/10 rounded">
-                      <stat.icon className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            </ThemedContainer>
           </div>
         </div>
 
-        {/* Módulos disponibles */}
+        {/* Módulos básicos */}
         <ThemedContainer title="MÓDULOS DISPONIBLES" className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {renderModules().map((module, index) => (
-              <Card 
-                key={index} 
-                className={`border border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer ${module.color}`}
-                onClick={() => router.push(module.href)}
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg text-primary">{module.title}</CardTitle>
-                    <module.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <CardDescription>{module.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" size="sm" className="w-full">
-                    ACCEDER
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {/* Módulo de Perfil */}
+            <div className="border border-border/50 rounded-lg p-4 hover:border-primary/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-primary">Perfil de Usuario</h3>
+                  <p className="text-sm text-muted-foreground">Gestiona tu información personal</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="w-full">
+                Configurar Perfil
+              </Button>
+            </div>
+
+            {/* Módulo de Contenido */}
+            <div className="border border-border/50 rounded-lg p-4 hover:border-primary/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-primary">Contenido</h3>
+                  <p className="text-sm text-muted-foreground">Guías y artículos</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="w-full">
+                Explorar Contenido
+              </Button>
+            </div>
+
+            {/* Módulo de Configuración */}
+            <div className="border border-border/50 rounded-lg p-4 hover:border-primary/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <Settings className="h-5 w-5 text-purple-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-primary">Configuración</h3>
+                  <p className="text-sm text-muted-foreground">Ajustes del sistema</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="w-full">
+                Configurar Sistema
+              </Button>
+            </div>
           </div>
         </ThemedContainer>
 
-        {/* Sistema y actividad */}
+        {/* Información del sistema */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Estado del sistema */}
-          <ThemedContainer title="ESTADO DEL SISTEMA">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 border border-green-500/20 bg-green-500/5">
-                <div className="flex items-center gap-3">
-                  <Zap className="h-5 w-5 text-green-500" />
-                  <span>Sistema Principal</span>
-                </div>
-                <span className="text-green-500 font-bold">OPERATIVO</span>
+          <ThemedContainer title="INFORMACIÓN DEL SISTEMA">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span>Modo de seguridad:</span>
+                <span className="text-yellow-500 font-bold">DESACTIVADO (pruebas)</span>
               </div>
-              <div className="flex items-center justify-between p-3 border border-blue-500/20 bg-blue-500/5">
-                <div className="flex items-center gap-3">
-                  <Database className="h-5 w-5 text-blue-500" />
-                  <span>Base de Datos</span>
-                </div>
-                <span className="text-blue-500 font-bold">CONECTADO</span>
+              <div className="flex items-center justify-between">
+                <span>Middleware:</span>
+                <span className="text-yellow-500 font-bold">PERMITIENDO TODO</span>
               </div>
-              <div className="flex items-center justify-between p-3 border border-yellow-500/20 bg-yellow-500/5">
-                <div className="flex items-center gap-3">
-                  <Network className="h-5 w-5 text-yellow-500" />
-                  <span>Red</span>
-                </div>
-                <span className="text-yellow-500 font-bold">ESTABLE</span>
+              <div className="flex items-center justify-between">
+                <span>Autenticación:</span>
+                <span className={user ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
+                  {user ? 'ACTIVA' : 'INACTIVA'}
+                </span>
               </div>
-              <div className="flex items-center justify-between p-3 border border-primary/20 bg-primary/5">
-                <div className="flex items-center gap-3">
-                  <Terminal className="h-5 w-5 text-primary" />
-                  <span>API</span>
-                </div>
-                <span className="text-primary font-bold">ACTIVO</span>
+              <div className="flex items-center justify-between">
+                <span>Base de datos:</span>
+                <span className="text-green-500 font-bold">CONECTADA</span>
               </div>
             </div>
           </ThemedContainer>
 
-          {/* Actividad reciente */}
-          <ThemedContainer title="ACTIVIDAD RECIENTE">
-            <div className="space-y-4">
-              <div className="p-3 border border-border/50">
-                <p className="text-sm text-muted-foreground">Hace 2 minutos</p>
-                <p className="text-primary">Sesión iniciada desde IP segura</p>
+          <ThemedContainer title="PRÓXIMOS PASOS">
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-bold text-primary">1. Verificar acceso al dashboard</p>
+                  <p className="text-sm text-muted-foreground">Debes poder ver esta página sin redirección a login</p>
+                </div>
               </div>
-              <div className="p-3 border border-border/50">
-                <p className="text-sm text-muted-foreground">Hace 1 hora</p>
-                <p className="text-primary">Acceso al panel de control</p>
+              
+              <div className="flex items-start gap-2">
+                <div className="h-5 w-5 rounded-full border border-primary mt-0.5"></div>
+                <div>
+                  <p className="font-bold text-primary">2. Iniciar sesión con Supabase</p>
+                  <p className="text-sm text-muted-foreground">Usa el botón de login en la navbar</p>
+                </div>
               </div>
-              <div className="p-3 border border-border/50">
-                <p className="text-sm text-muted-foreground">Hoy, 08:30</p>
-                <p className="text-primary">Actualización del sistema completada</p>
+              
+              <div className="flex items-start gap-2">
+                <div className="h-5 w-5 rounded-full border border-primary mt-0.5"></div>
+                <div>
+                  <p className="font-bold text-primary">3. Crear perfil en base de datos</p>
+                  <p className="text-sm text-muted-foreground">Usa el botón "Crear Perfil" arriba</p>
+                </div>
               </div>
             </div>
           </ThemedContainer>
+        </div>
+
+        {/* Nota de seguridad */}
+        <div className="mt-8 border-2 border-yellow-500/30 bg-yellow-500/10 p-4 rounded-none">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-yellow-500 mb-2">⚠️ MODO DE PRUEBA ACTIVADO</h4>
+              <p className="text-yellow-500/90 text-sm">
+                El middleware de seguridad está deshabilitado para permitir pruebas. En un entorno de producción real:
+              </p>
+              <ul className="list-disc pl-5 mt-2 text-sm text-yellow-500/90 space-y-1">
+                <li>Restaurar el middleware completo con verificación de sesión</li>
+                <li>Habilitar políticas de seguridad (RLS en Supabase)</li>
+                <li>Configurar variables de entorno adecuadas</li>
+                <li>Implementar HTTPS y cookies seguras</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </main>
       <Footer />
