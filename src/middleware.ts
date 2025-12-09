@@ -1,15 +1,33 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Crear cliente de Supabase para middleware (sin necesidad de auth-helpers)
+const createMiddlewareSupabaseClient = (req: NextRequest) => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hfjtksfqcmuebxfmbxgq.supabase.co";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmanRrc2ZxY211ZWJ4Zm1ieGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyODYzNTksImV4cCI6MjA4MDg2MjM1OX0.38pVqlfbWYMjHfgwn_MKk6d6_Sa6SGMkwuYjtNbOmfU";
+
+  // Obtener la sesión de las cookies
+  const cookieHeader = req.headers.get('cookie') || '';
+  
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Cookie: cookieHeader,
+      },
+    },
+    auth: {
+      persistSession: false,
+    },
+  });
+};
 
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
+  const supabase = createMiddlewareSupabaseClient(request);
+  
+  // Obtener sesión
+  const { data: { session } } = await supabase.auth.getSession();
+  
   // Rutas protegidas
   const protectedRoutes = ['/dashboard'];
   const adminRoutes = ['/dashboard/users', '/dashboard/settings'];
@@ -60,7 +78,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {
