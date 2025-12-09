@@ -1,35 +1,20 @@
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Crear cliente de Supabase para middleware (sin necesidad de auth-helpers)
-const createMiddlewareSupabaseClient = (req: NextRequest) => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hfjtksfqcmuebxfmbxgq.supabase.co";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmanRrc2ZxY211ZWJ4Zm1ieGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyODYzNTksImV4cCI6MjA4MDg2MjM1OX0.38pVqlfbWYMjHfgwn_MKk6d6_Sa6SGMkwuYjtNbOmfU";
-
-  // Obtener todas las cookies usando la API de RequestCookies
-  const cookies = req.cookies.getAll();
-  // Construir el header de cookies
-  const cookieHeader = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
-  
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Cookie: cookieHeader,
-      },
-    },
-    auth: {
-      persistSession: false,
-    },
-  });
-};
 
 export async function middleware(request: NextRequest) {
-  const supabase = createMiddlewareSupabaseClient(request);
-  
-  // Obtener sesión
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req: request, res });
+
+  // Actualizar la sesión si es necesario
   const { data: { session } } = await supabase.auth.getSession();
   
+  // Depuración: log en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Middleware - Session:', session ? 'Present' : 'None');
+    console.log('Middleware - Path:', request.nextUrl.pathname);
+  }
+
   // Rutas protegidas
   const protectedRoutes = ['/dashboard'];
   const adminRoutes = ['/dashboard/users', '/dashboard/settings'];
@@ -46,6 +31,9 @@ export async function middleware(request: NextRequest) {
 
   // Si no hay sesión y es una ruta protegida, redirigir a login
   if (!session && isProtectedRoute) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Middleware - No session, redirecting to login');
+    }
     const redirectUrl = new URL('/login', request.url);
     return NextResponse.redirect(redirectUrl);
   }
@@ -59,6 +47,12 @@ export async function middleware(request: NextRequest) {
       .eq('id', session.user.id)
       .maybeSingle();
 
+    // Depuración
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Middleware - Profile:', profile);
+      console.log('Middleware - Error:', error);
+    }
+
     // Si hay error o no existe perfil, todavía permitir acceso a rutas básicas
     // (el dashboard se encargará de crear el perfil si es necesario)
     if (error || !profile) {
@@ -68,7 +62,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(redirectUrl);
       }
       // Para otras rutas protegidas (como /dashboard), permitir acceso
-      return NextResponse.next();
+      return res;
     }
 
     // Verificar permisos para rutas de admin
@@ -90,7 +84,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {
