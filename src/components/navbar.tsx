@@ -8,6 +8,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { ThemeToggle } from "./theme-toggle"
 
 const navItems = [
   { name: "Inicio", href: "/", icon: Home },
@@ -48,7 +49,7 @@ export function Navbar() {
           </nav>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           {/* Barra de búsqueda */}
           <div className="hidden md:flex items-center relative">
             <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
@@ -57,6 +58,9 @@ export function Navbar() {
               className="pl-10 w-64 bg-secondary/50 border-border focus-visible:ring-primary"
             />
           </div>
+          
+          {/* Toggle de tema */}
+          <ThemeToggle />
           
           {/* Menú móvil */}
           <Sheet>
