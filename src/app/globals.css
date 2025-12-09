@@ -77,8 +77,8 @@
     --sidebar-ring: 217.2 91.2% 59.8%}
   .dark {
 
-    /* Fondo: Gris oscuro */
-    --background: 0 0% 8%; 
+    /* Fondo: Verde militar oscuro más claro (H:80, S:10%, L:12%) */
+    --background: 80 10% 12%; 
 
     --foreground: 0 0% 98%;
 
