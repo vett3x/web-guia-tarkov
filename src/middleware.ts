@@ -7,10 +7,10 @@ const createMiddlewareSupabaseClient = (req: NextRequest) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hfjtksfqcmuebxfmbxgq.supabase.co";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmanRrc2ZxY211ZWJ4Zm1ieGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyODYzNTksImV4cCI6MjA4MDg2MjM1OX0.38pVqlfbWYMjHfgwn_MKk6d6_Sa6SGMkwuYjtNbOmfU";
 
-  // MODIFICACIÓN: Usar request.cookies para construir el header de cookies de forma explícita
-  // Esto es más robusto en el entorno de Next.js Middleware.
-  const cookieEntries = Array.from(req.cookies.entries());
-  const cookieHeader = cookieEntries.map(([name, value]) => `${name}=${value}`).join('; ');
+  // Obtener todas las cookies usando la API de RequestCookies
+  const cookies = req.cookies.getAll();
+  // Construir el header de cookies
+  const cookieHeader = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
   
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
