@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Map, ScrollText, Shield, Target, Crosshair, BookOpen, Sword, Armchair, ChevronRight } from "lucide-react";
+import { Map, ScrollText, Shield, Target, Crosshair, BookOpen, Sword, Armchair, ChevronRight, LogIn } from "lucide-react";
 import { CardTematica } from "@/components/card-tematica";
 import { HeroSection } from "@/components/hero-section";
 import { ThemedContainer } from "@/components/themed-container";
@@ -10,6 +10,7 @@ import { SocialsSection } from "@/components/socials-section";
 import { Badge } from "@/components/ui/badge";
 import { PopularGuides } from "@/components/popular-guides";
 import { TwitchStreams } from "@/components/twitch-streams";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 export default function Home() {
   const featuredGuides = [
@@ -74,6 +75,11 @@ export default function Home() {
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         
+        {/* BOTÓN DE ACCESO AL DASHBOARD */}
+        <div className="flex justify-end mb-6">
+          <UserMenu />
+        </div>
+
         {/* REDES SOCIALES PRIMERO - MÁS DESTACADO */}
         <div className="mb-12">
           <SocialsSection />
