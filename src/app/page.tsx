@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Map, ScrollText, Shield, Target, Crosshair, BookOpen, Sword, Armchair } from "lucide-react";
+import { Map, ScrollText, Shield, Target, Crosshair, BookOpen, Sword, Armchair, ChevronRight } from "lucide-react";
 import { CardTematica } from "@/components/card-tematica";
 import { HeroSection } from "@/components/hero-section";
 import { ThemedContainer } from "@/components/themed-container";
@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SocialsSection } from "@/components/socials-section";
 import { Badge } from "@/components/ui/badge";
+import { PopularGuides } from "@/components/popular-guides";
 
 export default function Home() {
   const featuredGuides = [
@@ -43,6 +44,30 @@ export default function Home() {
     { name: "Escondite", icon: Shield, href: "#", color: "bg-cyan-500/10 text-cyan-600" },
   ];
 
+  const gameUpdates = [
+    {
+      title: "Nueva Arena: Guía Completa",
+      description: "Todo lo que necesitas saber sobre el nuevo modo Arena de Tarkov.",
+      date: "Hace 3 días",
+      tag: "Nuevo",
+      color: "bg-green-500/10 text-green-600"
+    },
+    {
+      title: "Parche 0.14.5.0 - Cambios de Balance",
+      description: "Ajustes en armas, economía y mecánicas de juego.",
+      date: "Hace 1 semana",
+      tag: "Parche",
+      color: "bg-blue-500/10 text-blue-600"
+    },
+    {
+      title: "Evento: The Contract Wars",
+      description: "Participa en el evento limitado con recompensas exclusivas.",
+      date: "Hace 2 semanas",
+      tag: "Evento",
+      color: "bg-purple-500/10 text-purple-600"
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-secondary/20">
       <Navbar />
@@ -52,7 +77,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Columna Izquierda: Guías Destacadas */}
+          {/* Columna Izquierda: Guías Destacadas y Acceso Rápido */}
           <div className="lg:col-span-2 space-y-8">
             <ThemedContainer title="GUÍAS PRINCIPALES" className="border-2 border-primary/20">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,8 +101,9 @@ export default function Home() {
                       Explora nuestras guías especializadas por categoría
                     </p>
                   </div>
-                  <Button variant="outline" className="border-primary/30 hover:bg-primary/10">
-                    Ver Todas las Categorías
+                  <Button variant="outline" className="border-primary/30 hover:bg-primary/10 group">
+                    <span>Ver Todas las Categorías</span>
+                    <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               </div>
@@ -102,46 +128,65 @@ export default function Home() {
                 ))}
               </div>
             </ThemedContainer>
+
+            {/* Últimas Actualizaciones del Juego */}
+            <ThemedContainer title="ACTUALIZACIONES DEL JUEGO" className="border-2 border-primary/20">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {gameUpdates.map((update) => (
+                  <div 
+                    key={update.title}
+                    className="p-4 border border-border/50 rounded-lg hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge className={`${update.color} border-0`}>
+                        {update.tag}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{update.date}</span>
+                    </div>
+                    <h4 className="font-bold text-primary mb-2">{update.title}</h4>
+                    <p className="text-sm text-muted-foreground">{update.description}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 pt-4 border-t border-border/50 text-center">
+                <Link href="#" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
+                  Ver historial completo de parches
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </ThemedContainer>
           </div>
 
-          {/* Columna Derecha: Redes Sociales y Actualizaciones */}
+          {/* Columna Derecha: Guías Populares, Redes Sociales y Stats */}
           <div className="space-y-8">
+            <PopularGuides />
+            
             <SocialsSection />
             
-            <ThemedContainer title="ÚLTIMAS ACTUALIZACIONES">
+            <ThemedContainer title="ESTADÍSTICAS DE LA COMUNIDAD">
               <div className="space-y-4">
-                <div className="p-3 border border-border/50 rounded-lg hover:border-primary/30 transition-colors">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="secondary" className="text-xs">Nuevo</Badge>
-                    <span className="text-xs text-muted-foreground">Hace 2 días</span>
-                  </div>
-                  <h5 className="font-semibold text-sm">Guía de Streets of Tarkov actualizada</h5>
-                  <p className="text-xs text-muted-foreground mt-1">Nuevos puntos de loot y rutas añadidas</p>
+                <div className="flex items-center justify-between p-3 bg-primary/5 rounded border border-primary/10">
+                  <span className="text-sm text-foreground">Usuarios activos hoy</span>
+                  <span className="font-bold text-primary">2,847</span>
                 </div>
-                
-                <div className="p-3 border border-border/50 rounded-lg hover:border-primary/30 transition-colors">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="text-xs">Parche</Badge>
-                    <span className="text-xs text-muted-foreground">Hace 1 semana</span>
-                  </div>
-                  <h5 className="font-semibold text-sm">Cambios en el mercado de Flea</h5>
-                  <p className="text-xs text-muted-foreground mt-1">Nuevas restricciones y precios actualizados</p>
+                <div className="flex items-center justify-between p-3 bg-primary/5 rounded border border-primary/10">
+                  <span className="text-sm text-foreground">Guías consultadas</span>
+                  <span className="font-bold text-primary">15,234</span>
                 </div>
-                
-                <div className="p-3 border border-border/50 rounded-lg hover:border-primary/30 transition-colors">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="text-xs">Meta</Badge>
-                    <span className="text-xs text-muted-foreground">Hace 2 semanas</span>
-                  </div>
-                  <h5 className="font-semibold text-sm">Loadouts actuales para wipe</h5>
-                  <p className="text-xs text-muted-foreground mt-1">Las mejores combinaciones de equipo para este parche</p>
+                <div className="flex items-center justify-between p-3 bg-primary/5 rounded border border-primary/10">
+                  <span className="text-sm text-foreground">Mapas vistos</span>
+                  <span className="font-bold text-primary">8,912</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-primary/5 rounded border border-primary/10">
+                  <span className="text-sm text-foreground">Miembros Discord</span>
+                  <span className="font-bold text-primary">1,245</span>
                 </div>
               </div>
               
               <div className="mt-6 pt-4 border-t border-border/50">
-                <Link href="#" className="text-sm text-primary hover:underline flex items-center gap-1">
-                  Ver todas las actualizaciones →
-                </Link>
+                <p className="text-xs text-center text-muted-foreground">
+                  Únete a nuestra comunidad en crecimiento
+                </p>
               </div>
             </ThemedContainer>
           </div>
