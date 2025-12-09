@@ -73,12 +73,17 @@ export default function Home() {
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         
-        <HeroSection />
+        {/* REDES SOCIALES PRIMERO - MÁS DESTACADO */}
+        <div className="mb-12">
+          <SocialsSection />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Columna Izquierda: Guías Destacadas y Acceso Rápido */}
           <div className="lg:col-span-2 space-y-8">
+            <HeroSection />
+
             <ThemedContainer title="GUÍAS PRINCIPALES" className="border-2 border-primary/20">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {featuredGuides.map((guide) => (
@@ -157,11 +162,9 @@ export default function Home() {
             </ThemedContainer>
           </div>
 
-          {/* Columna Derecha: Guías Populares, Redes Sociales y Stats */}
+          {/* Columna Derecha: Guías Populares y Stats */}
           <div className="space-y-8">
             <PopularGuides />
-            
-            <SocialsSection />
             
             <ThemedContainer title="ESTADÍSTICAS DE LA COMUNIDAD">
               <div className="space-y-4">
