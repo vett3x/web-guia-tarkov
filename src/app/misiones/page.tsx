@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 export default function MisionesPage() {
   return (
@@ -10,6 +11,7 @@ export default function MisionesPage() {
           Una guía completa para completar todas las misiones de los Comerciantes, incluyendo requisitos y recompensas. ¡Próximamente!
         </p>
       </main>
+      <Footer />
     </div>
   );
 }

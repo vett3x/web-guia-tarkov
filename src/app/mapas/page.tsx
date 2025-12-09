@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 export default function MapasPage() {
   return (
@@ -10,6 +11,7 @@ export default function MapasPage() {
           Aquí encontrarás todos los mapas detallados con puntos de interés, loot y rutas de extracción. ¡Próximamente!
         </p>
       </main>
+      <Footer />
     </div>
   );
 }

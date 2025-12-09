@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 export default function ComerciantesPage() {
   return (
@@ -10,6 +11,7 @@ export default function ComerciantesPage() {
           Información detallada sobre Peacekeeper, Prapor, Therapist y todos los demás Comerciantes. ¡Próximamente!
         </p>
       </main>
+      <Footer />
     </div>
   );
 }

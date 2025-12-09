@@ -1,7 +1,36 @@
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Map, ScrollText } from "lucide-react";
+import { ArrowRight, Map, ScrollText, Shield } from "lucide-react";
 import Link from "next/link";
+import { Footer } from "@/components/footer";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { LucideIcon } from "lucide-react";
+
+interface CardTematicaProps {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  href: string;
+}
+
+const CardTematica: React.FC<CardTematicaProps> = ({ title, description, icon: Icon, href }) => {
+  return (
+    <Link href={href}>
+      <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-medium">{title}</CardTitle>
+          <Icon className="h-6 w-6 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <CardDescription className="text-sm">{description}</CardDescription>
+          <div className="mt-4 text-sm font-semibold text-primary flex items-center">
+            Ver Guía <ArrowRight className="ml-1 h-4 w-4" />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+};
 
 export default function Home() {
   return (
@@ -53,35 +82,7 @@ export default function Home() {
           />
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
-
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { LucideIcon, Shield } from "lucide-react";
-
-interface CardTematicaProps {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  href: string;
-}
-
-const CardTematica: React.FC<CardTematicaProps> = ({ title, description, icon: Icon, href }) => {
-  return (
-    <Link href={href}>
-      <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium">{title}</CardTitle>
-          <Icon className="h-6 w-6 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <CardDescription className="text-sm">{description}</CardDescription>
-          <div className="mt-4 text-sm font-semibold text-primary flex items-center">
-            Ver Guía <ArrowRight className="ml-1 h-4 w-4" />
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-};
