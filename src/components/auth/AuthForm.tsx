@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { ThemedContainer } from '@/components/themed-container';
-import { Shield, UserPlus, LogIn } from 'lucide-react';
 
 export function AuthForm() {
   const { session, isLoading } = useAuth();
@@ -20,18 +19,8 @@ export function AuthForm() {
   }, [session, isLoading, router]);
 
   return (
-    <ThemedContainer title="ACCESO AL SISTEMA" className="max-w-md mx-auto border-2 border-primary/30">
-      <div className="p-6 space-y-6">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
-            <Shield className="h-8 w-8 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold text-primary mb-2">CONTROL TÁCTICO</h2>
-          <p className="text-sm text-muted-foreground">
-            Acceso exclusivo para personal autorizado
-          </p>
-        </div>
-
+    <ThemedContainer title="ACCESO" className="border-2 border-primary/30">
+      <div className="p-6">
         <Auth
           supabaseClient={supabase}
           appearance={{
@@ -64,7 +53,7 @@ export function AuthForm() {
               sign_in: {
                 email_label: 'EMAIL',
                 password_label: 'CONTRASEÑA',
-                button_label: 'ACCEDER',
+                button_label: 'INICIAR SESIÓN',
                 loading_button_label: 'ACCEDIENDO...',
                 link_text: '¿Ya tienes cuenta? Accede aquí',
               },
@@ -79,25 +68,6 @@ export function AuthForm() {
           }}
           view="sign_in"
         />
-
-        <div className="border-t border-border/50 pt-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 border border-primary/20 rounded hover:bg-primary/5 transition-colors">
-              <UserPlus className="h-5 w-5 text-primary mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">Registro nuevo usuario</p>
-            </div>
-            <div className="text-center p-3 border border-primary/20 rounded hover:bg-primary/5 transition-colors">
-              <LogIn className="h-5 w-5 text-primary mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">Acceso rápido</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground">
-            Solo personal autorizado. Todas las actividades son monitoreadas.
-          </p>
-        </div>
       </div>
     </ThemedContainer>
   );
