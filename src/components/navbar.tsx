@@ -31,8 +31,8 @@ export function Navbar() {
               className="h-12 w-12 md:h-16 md:w-16 object-contain group-hover:scale-105 transition-transform duration-300"
             />
             <div className="flex flex-col">
-              <div className="text-xl md:text-2xl font-bold text-primary leading-none">Guía</div>
-              <div className="text-base md:text-xl font-bold text-primary leading-none">Español</div>
+              <div className="text-lg md:text-xl font-bold text-primary leading-tight">Guía</div>
+              <div className="text-sm md:text-base font-bold text-primary leading-tight">Español</div>
             </div>
           </Link>
           
