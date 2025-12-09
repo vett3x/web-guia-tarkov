@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Twitch, Instagram, X, Discord, Youtube, MonitorPlay } from "lucide-react";
+import { Twitch, Instagram, X, MessageCircle, Youtube, MonitorPlay } from "lucide-react";
 import { ThemedContainer } from "./themed-container";
-import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
 interface SocialLinkProps {
@@ -12,12 +11,18 @@ interface SocialLinkProps {
 }
 
 const SocialLink: React.FC<SocialLinkProps> = ({ href, icon: Icon, label, className }) => (
-  <Button asChild variant="secondary" className={cn("w-full justify-start", className)}>
-    <Link href={href} target="_blank" rel="noopener noreferrer">
-      <Icon className="h-5 w-5 mr-2" />
-      {label}
-    </Link>
-  </Button>
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={cn(
+      "inline-flex items-center justify-start w-full px-4 py-2 text-sm font-medium transition-colors rounded-md border border-input bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      className
+    )}
+  >
+    <Icon className="h-5 w-5 mr-2" />
+    {label}
+  </a>
 );
 
 export function SocialsSection() {
@@ -27,7 +32,7 @@ export function SocialsSection() {
     { href: "#", icon: MonitorPlay, label: "Kick (Streams)" },
     { href: "#", icon: Instagram, label: "Instagram" },
     { href: "#", icon: X, label: "X (Twitter)" },
-    { href: "#", icon: Discord, label: "Discord Oficial" },
+    { href: "#", icon: MessageCircle, label: "Discord Oficial" },
   ];
 
   return (
