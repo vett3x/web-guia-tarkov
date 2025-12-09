@@ -22,15 +22,18 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg">
       <div className="container flex h-20 items-center justify-between px-4 md:px-6">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="flex flex-col items-center text-lg font-bold tracking-tight text-primary group">
+          <Link href="/" className="flex items-center gap-3 text-lg font-bold tracking-tight text-primary group">
             <Image 
               src="/eft-logo.webp" 
               alt="Escape from Tarkov Logo" 
               width={64} 
               height={64} 
-              className="h-16 w-16 object-contain group-hover:scale-105 transition-transform duration-300"
+              className="h-12 w-12 md:h-16 md:w-16 object-contain group-hover:scale-105 transition-transform duration-300"
             />
-            <span className="text-xs text-muted-foreground mt-1">Guía Español</span>
+            <div className="flex flex-col">
+              <div className="text-xl md:text-2xl font-bold text-primary leading-none">Guía</div>
+              <div className="text-base md:text-xl font-bold text-primary leading-none">Español</div>
+            </div>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-1 ml-8">
