@@ -1,11 +1,12 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Map, ScrollText, Shield, ArrowRight, Video } from "lucide-react";
+import { Map, ScrollText, Shield } from "lucide-react";
 import { CardTematica } from "@/components/card-tematica";
 import { HeroSection } from "@/components/hero-section";
 import { ThemedContainer } from "@/components/themed-container";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SocialsSection } from "@/components/socials-section";
 
 export default function Home() {
   return (
@@ -82,23 +83,9 @@ export default function Home() {
             </ThemedContainer>
           </div>
 
-          {/* Columna Derecha: Eventos y Multimedia */}
-          <div className="lg:col-span-1 space-y-6">
-            <ThemedContainer title="Eventos Actuales">
-              <p className="text-sm text-muted-foreground">
-                Actualmente no hay eventos activos en Tarkov. ¡Mantente alerta!
-              </p>
-            </ThemedContainer>
-
-            <ThemedContainer title="Últimos Videos">
-              <div className="aspect-video bg-black flex items-center justify-center text-white text-center">
-                <Video className="h-10 w-10 mr-2" />
-                <p>Video Placeholder</p>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Simulación de un video destacado de la comunidad.
-              </p>
-            </ThemedContainer>
+          {/* Columna Derecha: Redes Sociales y Streams */}
+          <div className="lg:col-span-1">
+            <SocialsSection />
           </div>
         </div>
       </main>
