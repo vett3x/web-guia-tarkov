@@ -33,62 +33,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const createProfileIfMissing = async (userId: string, userEmail: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: userEmail,
-          username: userEmail.split('@')[0],
-          role: 'user'
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating profile:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error creating profile:', error);
-      return null;
-    }
-  };
-
-  const loadUserProfile = async (userId: string, userEmail: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') { // No se encontró el perfil
-          console.log('Profile not found, creating one...');
-          const newProfile = await createProfileIfMissing(userId, userEmail);
-          setProfile(newProfile);
-        } else {
-          console.error('Error loading profile:', error);
-          setProfile(null);
-        }
-      } else {
-        setProfile(data);
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      setProfile(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('AuthContext - Initializing auth state...');
+    }
+
     // Obtener sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('AuthContext - Initial session:', session ? 'Exists' : 'None');
+        console.log('AuthContext - User ID:', session?.user?.id);
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -97,11 +53,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setIsLoading(false);
       }
+    }).catch(error => {
+      console.error('AuthContext - Error getting initial session:', error);
+      setIsLoading(false);
     });
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('AuthContext - Auth state changed:', event);
+          console.log('AuthContext - New session:', session ? 'Exists' : 'None');
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -116,6 +80,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const loadUserProfile = async (userId: string, userEmail: string) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('AuthContext - Loading profile for user:', userId);
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') { // No se encontró el perfil
+          if (process.env.NODE_ENV === 'development') {
+            console.log('AuthContext - Profile not found, will create one in dashboard');
+          }
+          // No creamos el perfil aquí, lo dejamos para el dashboard
+          setProfile(null);
+        } else {
+          console.error('AuthContext - Error loading profile:', error);
+          setProfile(null);
+        }
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('AuthContext - Profile loaded:', data);
+        }
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('AuthContext - Error loading profile:', error);
+      setProfile(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const signOut = async () => {
     await supabase.auth.signOut();
