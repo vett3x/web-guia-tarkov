@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { SocialsSection } from "@/components/socials-section";
 import { Badge } from "@/components/ui/badge";
 import { PopularGuides } from "@/components/popular-guides";
+import { TwitchStreams } from "@/components/twitch-streams";
 
 export default function Home() {
   const featuredGuides = [
@@ -76,6 +77,11 @@ export default function Home() {
         {/* REDES SOCIALES PRIMERO - MÁS DESTACADO */}
         <div className="mb-12">
           <SocialsSection />
+        </div>
+
+        {/* TRANSMISIONES DE TWITCH */}
+        <div className="mb-12">
+          <TwitchStreams />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
