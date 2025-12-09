@@ -1,6 +1,5 @@
 import Link from "next/link"
 import Image from "next/image"
-import { ThemeToggle } from "./theme-toggle"
 import { Map, ScrollText, Shield, Home } from "lucide-react"
 import { Button } from "./ui/button"
 
@@ -37,7 +36,7 @@ export function Navbar() {
           </nav>
         </div>
         <div className="flex items-center space-x-2">
-          <ThemeToggle />
+          {/* ThemeToggle eliminado */}
         </div>
       </div>
     </header>
