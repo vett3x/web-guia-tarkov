@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link"
 import Image from "next/image"
-import { Map, ScrollText, Shield, Home, Search, Menu, Crosshair } from "lucide-react"
+import { Map, ScrollText, Shield, Home, Search, Menu, Crosshair, LogIn, User } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import {
@@ -9,6 +11,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ThemeToggle } from "./theme-toggle"
+import { useAuth } from "@/contexts/AuthContext"
+import { UserMenu } from "./layout/UserMenu"
 
 const navItems = [
   { name: "BASE", href: "/", icon: Home },
@@ -18,6 +22,8 @@ const navItems = [
 ]
 
 export function Navbar() {
+  const { user, isLoading } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-gradient-to-b from-black/80 to-black/60 backdrop-blur supports-[backdrop-filter]:bg-black/40 shadow-2xl">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
@@ -74,6 +80,26 @@ export function Navbar() {
           {/* Toggle de tema */}
           <ThemeToggle />
           
+          {/* Menú de usuario o botón de login */}
+          {!isLoading && (
+            <>
+              {user ? (
+                <UserMenu />
+              ) : (
+                <Button 
+                  asChild
+                  variant="outline"
+                  className="border-primary/30 hover:border-primary hover:bg-primary/10 bg-black/30 rounded-none group"
+                >
+                  <Link href="/login" className="flex items-center gap-2">
+                    <LogIn className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="hidden md:inline font-bold text-sm tracking-wider text-primary">ACCESO</span>
+                  </Link>
+                </Button>
+              )}
+            </>
+          )}
+          
           {/* Menú móvil */}
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
@@ -93,6 +119,28 @@ export function Navbar() {
                     <span className="font-bold text-sm tracking-wider text-primary">{item.name}</span>
                   </Link>
                 ))}
+                
+                {/* Enlace de login en menú móvil */}
+                {!isLoading && !user && (
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-3 p-3 rounded-none border border-primary/30 hover:border-primary hover:bg-primary/10 transition-all mt-4"
+                  >
+                    <LogIn className="h-4 w-4 text-primary" />
+                    <span className="font-bold text-sm tracking-wider text-primary">INICIAR SESIÓN</span>
+                  </Link>
+                )}
+              </div>
+              
+              {/* Información de estado en menú móvil */}
+              <div className="mt-8 p-4 border-t border-border/50">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 animate-pulse rounded-full"></div>
+                  <span className="text-xs font-bold text-primary/70 uppercase tracking-wider">SISTEMA OPERATIVO</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Acceso al sistema de control táctico
+                </p>
               </div>
             </SheetContent>
           </Sheet>
